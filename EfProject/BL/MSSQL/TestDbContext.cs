@@ -1,14 +1,22 @@
-﻿using EfProject.Model;
+﻿using System;
+using System.Threading.Channels;
+using EfProject.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace EfProject.BL.MSSQL
 {
     sealed class TestDbContext : DbContext
     {
-        public TestDbContext()
+        public TestDbContext(bool flag = false)
         {
-            //Database.EnsureDeleted();
+            if(flag)
+                Del();
             Database.EnsureCreated();
+        }
+
+        void Del()
+        {
+            Database.EnsureDeleted();
         }
 
         public DbSet<Shop> Shops { get; set; }
@@ -16,15 +24,15 @@ namespace EfProject.BL.MSSQL
         public DbSet<Category> Categories { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
-        public DbSet<Vendor> Vendors { get; set; }
-        public DbSet<Location> Locations { get; set; }
-        public DbSet<OfferGroup> OfferGroups { get; set; }
+        public DbSet<A> DbSetA { get; set; }
+        public DbSet<B> DbSetB { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlServer(
                 @"Server=(localdb)\MSSQLLocalDB;Database=MSDataBase;Trusted_Connection=True;");
+            //optionsBuilder.LogTo(Console.WriteLine);
         }
     }
 }

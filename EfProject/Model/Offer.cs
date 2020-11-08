@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Xml.Serialization;
 using EfProject.BL.MSSQL;
+using Microsoft.EntityFrameworkCore;
 
 namespace EfProject.Model
 {
@@ -11,16 +13,16 @@ namespace EfProject.Model
     public class Offer
     {
         private int _id;
-        private List<Category> _categories;
+        private ICollection<Category> _categories = new List<Category>();
         private Currency _currency;
         private decimal _basePrice;
         private int _count;
-        private Vendor _vendor;
+        private string _vendor;
         private string _name;
         private int _groupId;
         private string _vendorName;
-        private OfferGroup _offerGroup;
         private List<int> _categoryId = new List<int>();
+        private string _currencyId;
 
         [Key]
         [XmlAttribute("id")]
@@ -66,29 +68,8 @@ namespace EfProject.Model
                 if(value < 1)
                     throw new ArgumentException();
 
-                using (var db = new TestDbContext())
-                {
-                    var group = db.OfferGroups.Find(value);
-
-                    if(group == null)
-                        group = new OfferGroup(){Id = value};
-
-                    _offerGroup = group;
-                    _groupId = value;
-                }
-            }
-        }
-
-        public OfferGroup OfferGroup
-        {
-            get => _offerGroup;
-            set
-            {
-                if(value == null)
-                    throw new ArgumentNullException();
-
-                _offerGroup = value;
-                _groupId = value.Id;
+                _groupId = value;
+                
             }
         }
 
@@ -100,26 +81,18 @@ namespace EfProject.Model
         public List<int> CategoryId
         {
             get => _categoryId;
-            set
-            {
-                if(value == null)
-                    throw new ArgumentNullException();
-
-                using (var db = new TestDbContext())
-                {
-                    foreach (var nameId in value)
-                    {
-                        var category = db.Categories.Find(nameId) ?? new Category() {Id = nameId};
-                        _categories.Add(category);
-                    }
-                }
-            }
+            set => _categoryId = value ?? throw new ArgumentNullException();
         }
-        
-        public List<Category> Category
+
+        [XmlIgnore]
+        public ICollection<Category> Categories
         {
             get => _categories;
-            set => _categories = value;
+            set
+            {
+                _categories = value ?? throw new ArgumentNullException();
+                _categoryId.AddRange(value.Select(c => c.Id));
+            }
         }
 
         [XmlElement("url")]
@@ -149,7 +122,11 @@ namespace EfProject.Model
         /// </summary>
         [XmlElement("currencyId")]
         [NotMapped]
-        public string CurrencyId { get; set; }
+        public string CurrencyId
+        {
+            get => _currencyId;
+            set => _currencyId = value ?? throw new ArgumentNullException();
+        }
         
         public Currency Currency
         {
@@ -157,6 +134,7 @@ namespace EfProject.Model
             set
             {
                 _currency = value ?? throw new ArgumentNullException();
+                _currencyId = value.Name;
                 Price = BasePrice * value.Rate;
             }
         }
@@ -173,40 +151,16 @@ namespace EfProject.Model
         [NotMapped]
         public List<string> Locations { get; set; } = new List<string>();
 
-        public Vendor Vendor
-        {
-            get => _vendor;
-            set
-            {
-                _vendor = value ?? throw new ArgumentNullException();
-                VendorName = value.Name;
-            }
-        }
-
-        /// <summary>
-        /// Для установки значения используйте свойство Vendor. Публичный сеттер исключительно для десериализации XML!
-        /// </summary>
         [XmlElement("vendor")]
         [NotMapped]
-        public string VendorName
+        public string Vendor
         {
-            get => _vendorName;
-            set
-            {
-                using (var db = new TestDbContext())
-                {
-                    var vendor = db.Vendors.Find(value);
-
-                    if (vendor == null)
-                        vendor = new Vendor() { Name = value };
-
-                    _vendor = vendor;
-                    _vendorName = value;
-                }
-            }
+            get => _vendor;
+            set => _vendor = value ?? throw new ArgumentNullException();
         }
 
         [XmlElement("description")]
+        [NotMapped]
         public string Description { get; set; }
 
         /// <summary>

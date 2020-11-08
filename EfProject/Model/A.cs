@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace EfProject.Model
 {
-    public class OfferGroup
+    class A
     {
-        [Key]
         public int Id { get; set; }
-
-        public List<Offer> Offers { get; set; }
+        public ICollection<B> Collection { get; set; } = new List<B>();
     }
 }

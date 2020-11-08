@@ -24,8 +24,8 @@ namespace EfProject.Model
             }
         }
 
-        public List<Offer> Offers { get; set; }
-        public List<Shop> Shops { get; set; }
+        public List<Offer> Offers { get; set; } = new List<Offer>();
+        public List<Shop> Shops { get; set; } = new List<Shop>();
         public override string ToString()
         {
             return Name;

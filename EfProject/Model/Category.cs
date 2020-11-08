@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Xml.Serialization;
 using EfProject.BL.MSSQL;
+using Microsoft.EntityFrameworkCore;
 
 namespace EfProject.Model
 {
@@ -45,19 +47,10 @@ namespace EfProject.Model
             get => _parentId;
             set
             {
-                if(value < 1)
-                    throw  new ArgumentException();
-
-                using (var db = new TestDbContext())
-                {
-                    var category = db.Categories.Find(value);
-
-                    if (category == null) 
-                        category = new Category() {Id = value};
-
-                    _category = category;
-                    _parentId = value;
-                }
+                if (value < 1)
+                    throw new ArgumentException();
+                
+                _parentId = value;
             }
         }
 
@@ -67,9 +60,11 @@ namespace EfProject.Model
             set
             {
                 _category = value;
-                ParentId = value.Id;
+                value.Categories.Add(this);
             }
         }
+
+        public List<Category> Categories { get; set; } = new List<Category>();
 
         public override string ToString()
         {
