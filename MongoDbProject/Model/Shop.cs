@@ -66,10 +66,10 @@ namespace MongoDbProject.Model
 
         public List<int> CategoriesId { get; set; } = new List<int>();
 
-        [BsonIgnore]
+        
         [XmlArray("offers")]
         public List<Offer> Offers { get; set; } = new List<Offer>();
-
+        [BsonIgnore]
         public List<int> OffersId { get; set; } = new List<int>();
 
         public void SetIds()

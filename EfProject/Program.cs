@@ -19,24 +19,14 @@ namespace EfProject
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            new TestDbContext(true);
             var xmlHandler = new XmlHandler(url);
             var shop = xmlHandler.GetElement<Shop>(searchElement);
-            WriteToDb(shop);
+            MigrationToDB(shop);
 
             Console.ReadLine();
         }
 
-        static void Ser<T>(T obj)
-        {
-            var formatter = new XmlSerializer(typeof(T));
-            using (var fs = new FileStream("test.xml", FileMode.OpenOrCreate))
-            {
-                formatter.Serialize(fs, obj);
-            }
-        }
-
-        static void WriteToDb(Shop shop)
+        static void MigrationToDB(Shop shop)
         {
             var tempShop = new Shop(){Name = shop.Name};
             using (var db = new TestDbContext())
@@ -50,7 +40,9 @@ namespace EfProject
                 db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
                 db.Database.OpenConnection();
                 db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Categories ON;");
-                db.Categories.AddRange(shop.Categories);
+                tempShop = db.Shops.Find(shop.Name);
+                tempShop.Categories.AddRange(shop.Categories);
+                db.Shops.Update(tempShop);
                 db.SaveChanges();
             }
             //using (var db = new TestDbContext())
@@ -74,16 +66,14 @@ namespace EfProject
                 db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
                 db.Database.OpenConnection();
                 db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Offers ON;");
-                foreach (var shopOffer in shop.Offers)
-                {
-                    db.Offers.Add(shopOffer);
-                }
-
+                db.Offers.AddRange(shop.Offers);
                 db.SaveChanges();
             }
             using (var db = new TestDbContext())
             {
                 db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                db.Shops.Add(shop);
+                db.SaveChanges();
             }
             using (var db = new TestDbContext())
             {

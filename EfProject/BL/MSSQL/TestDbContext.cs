@@ -24,8 +24,6 @@ namespace EfProject.BL.MSSQL
         public DbSet<Category> Categories { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Currency> Currencies { get; set; }
-        public DbSet<A> DbSetA { get; set; }
-        public DbSet<B> DbSetB { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
