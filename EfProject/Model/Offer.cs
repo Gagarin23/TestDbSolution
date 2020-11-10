@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EfProject.Model
 {
     [XmlType("offer")]
-    public class Offer
+    public partial class Offer
     {
         private int _id;
         private ICollection<Category> _categories = new List<Category>();
@@ -20,7 +20,6 @@ namespace EfProject.Model
         private string _vendor;
         private string _name;
         private int _groupId;
-        private string _vendorName;
         private List<int> _categoryId = new List<int>();
         private string _currencyId;
 
@@ -59,7 +58,6 @@ namespace EfProject.Model
         public bool IsAvaiblable { get; set; }
 
         [XmlAttribute("group_id")]
-        [NotMapped]
         public int GroupId
         {
             get => _groupId;
@@ -71,17 +69,6 @@ namespace EfProject.Model
                 _groupId = value;
                 
             }
-        }
-
-        /// <summary>
-        /// Для установки значения используйте свойство ParentCategory. Публичный сеттер исключения для десериализации XML!
-        /// </summary>
-        [XmlElement("categoryId")]
-        [NotMapped]
-        public List<int> CategoryId
-        {
-            get => _categoryId;
-            set => _categoryId = value ?? throw new ArgumentNullException();
         }
 
         [XmlIgnore]
@@ -116,17 +103,6 @@ namespace EfProject.Model
                 _basePrice = value;
             }
         }
-
-        /// <summary>
-        /// Для установки значения используйте свойство Currency. Публичный сеттер исключительно для десериализации XML!
-        /// </summary>
-        [XmlElement("currencyId")]
-        [NotMapped]
-        public string CurrencyId
-        {
-            get => _currencyId;
-            set => _currencyId = value ?? throw new ArgumentNullException();
-        }
         
         public Currency Currency
         {
@@ -139,29 +115,15 @@ namespace EfProject.Model
             }
         }
 
-        [XmlElement("picture")]
-        [NotMapped]
-        public string PictureUrl { get; set; }
-
         [XmlElement("delivery")]
         public bool IsDelivery { get; set; }
 
-        [XmlArray("orderingTime")]
-        [XmlArrayItem("ordering")]
-        [NotMapped]
-        public List<string> Locations { get; set; } = new List<string>();
-
         [XmlElement("vendor")]
-        [NotMapped]
         public string Vendor
         {
             get => _vendor;
             set => _vendor = value ?? throw new ArgumentNullException();
         }
-
-        [XmlElement("description")]
-        [NotMapped]
-        public string Description { get; set; }
 
         /// <summary>
         /// Ограничение по возрасту.
@@ -171,11 +133,62 @@ namespace EfProject.Model
 
         [XmlElement("barcode")]
         public long Barcode { get; set; }
+    }
+
+    partial class Offer
+    {
+        /// <summary>
+        /// Для установки значения используйте свойство ParentCategory. Публичный сеттер исключения для десериализации XML!
+        /// </summary>
+        [XmlElement("categoryId")]
+        [NotMapped]
+        public List<int> CategoryId
+        {
+            get => _categoryId;
+            set => _categoryId = value ?? throw new ArgumentNullException();
+        }
+
+        /// <summary>
+        /// Для установки значения используйте свойство Currency. Публичный сеттер исключительно для десериализации XML!
+        /// </summary>
+        [XmlElement("currencyId")]
+        [NotMapped]
+        public string CurrencyId
+        {
+            get => _currencyId;
+            set => _currencyId = value ?? throw new ArgumentNullException();
+        }
+
+        [XmlElement("description")]
+        [NotMapped]
+        public string Description { get; set; }
 
         [XmlElement("param")]
         [NotMapped]
         public List<AdditionalDescriptions> AdditionalDescriptions { get; set; } = new List<AdditionalDescriptions>();
 
+        [XmlArray("orderingTime")]
+        [XmlArrayItem("ordering")]
+        [NotMapped]
+        public List<string> Locations { get; set; } = new List<string>();
+
+        [XmlElement("picture")]
+        [NotMapped]
+        public string PictureUrl { get; set; }
+    }
+
+    [XmlType("param")]
+    public class AdditionalDescriptions
+    {
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+
+        [XmlText]
+        public string Description { get; set; }
+    }
+
+    partial class Offer
+    {
         public void ChangeCount(int value)
         {
             _count += value;
@@ -189,15 +202,5 @@ namespace EfProject.Model
         }
 
         public int Count() => _count;
-    }
-
-    [XmlType("param")]
-    public class AdditionalDescriptions
-    {
-        [XmlAttribute("name")]
-        public string Name { get; set; }
-
-        [XmlText]
-        public string Description { get; set; }
     }
 }

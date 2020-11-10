@@ -12,11 +12,12 @@ namespace EfProject
 {
     class Program
     {
-        private static string url = @"http://static.ozone.ru/multimedia/yml/facet/div_soft.xml";
+        private static string url = @"http://static.ozone.ru/multimedia/yml/facet/mobile_catalog/1133677.xml";
         private static string searchElement = @"shop";
 
         static void Main(string[] args)
         {
+            new TestDbContext(true);
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             var xmlHandler = new XmlHandler(url);
@@ -28,56 +29,55 @@ namespace EfProject
 
         static void MigrationToDB(Shop shop)
         {
-            var tempShop = new Shop(){Name = shop.Name};
-            using (var db = new TestDbContext())
-            {
-                db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                db.Shops.Add(tempShop);
-                db.SaveChanges();
-            }
-            using (var db = new TestDbContext())
-            {
-                db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                db.Database.OpenConnection();
-                db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Categories ON;");
-                tempShop = db.Shops.Find(shop.Name);
-                tempShop.Categories.AddRange(shop.Categories);
-                db.Shops.Update(tempShop);
-                db.SaveChanges();
-            }
-            //using (var db = new TestDbContext())
-            //{
-            //    db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-            //    db.Database.OpenConnection();
-            //    db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Offers ON;");
+            SetCategoriesForOffers(shop);
+            SetCurrenciesForOffers(shop);
 
-            //    var vendors = shop.Offers.Select(o => o.Vendor).Distinct().ToList();
+            using (var db = new TestDbContext())
+            {
+                var foundedShop = db.Shops
+                    .Include(s => s.Offers)
+                    .SingleOrDefault(s => s.ShopId == shop.ShopId);
 
-            //    vendors.RemoveAll(v => v == null);
-            //    vendors.ForEach(v => shop.Offers
-            //        .Where(o => o.Vendor?.Name == v.Name).ToList()
-            //        .ForEach(o => v.Offers.Add(o)));
+                if (foundedShop == null)
+                {
+                    db.Currencies.AddRange(shop.XmlCurrencies);
+                    db.SaveChanges();
 
-            //    db.Vendors.AddRange(vendors);
-            //    db.SaveChanges();
-            //}
-            using (var db = new TestDbContext())
-            {
-                db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                db.Database.OpenConnection();
-                db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Offers ON;");
-                db.Offers.AddRange(shop.Offers);
-                db.SaveChanges();
+                    db.Database.OpenConnection();
+                    db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Categories ON;");
+                    db.Categories.AddRange(shop.Categories);
+                    db.SaveChanges();
+                    db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Categories OFF;");
+
+                    db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Offers ON;");
+                    db.Offers.AddRange(shop.Offers);
+                    db.SaveChanges();
+                    db.Database.ExecuteSqlRaw("SET IDENTITY_INSERT dbo.Offers OFF;");
+
+                    db.Shops.Add(shop);
+                    db.SaveChanges();
+                }
             }
-            using (var db = new TestDbContext())
+        }
+
+        static void SetCategoriesForOffers(Shop shop)
+        {
+            var categories = shop.Categories;
+
+            foreach (var offer in shop.Offers)
             {
-                db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-                db.Shops.Add(shop);
-                db.SaveChanges();
+                offer.CategoryId.ForEach(oc => offer.Categories.Add(
+                    categories.SingleOrDefault(sc => sc.Id == oc)));
             }
-            using (var db = new TestDbContext())
+        }
+
+        static void SetCurrenciesForOffers(Shop shop)
+        {
+            var categories = shop.Currencies;
+
+            foreach (var offer in shop.Offers)
             {
-                db.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+                offer.Currency = shop.Currencies.SingleOrDefault(cur => cur.Name == offer.CurrencyId);
             }
         }
     }

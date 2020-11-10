@@ -1,29 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Xml.Serialization;
 
 namespace EfProject.Model
 {
     [XmlType("shop")]
-    public class Shop
+    public partial class Shop
     {
         private Company _company;
-        private string _name;
+        private string _shopId;
         private List<Currency> _currencies;
+        private List<Category> _categories;
+        private List<Offer> _offers;
 
         [Key]
         [XmlElement("name")]
-        public string Name
+        public string ShopId
         {
-            get => _name;
+            get => _shopId;
             set
             {
                 if(string.IsNullOrEmpty(value))
                     throw new ArgumentNullException();
 
-                _name = value;
+                _shopId = value;
             }
         }
 
@@ -40,22 +43,57 @@ namespace EfProject.Model
         [XmlElement("url")]
         public string Url { get; set; }
 
+        [XmlIgnore]
+        public ICollection<Currency> Currencies
+        {
+            get => _currencies;
+            set => _currencies = value as List<Currency> ?? throw new ArgumentNullException();
+        }
+
+        [XmlIgnore]
+        public ICollection<Category> Categories
+        {
+            get => _categories;
+            set => _categories = value as List<Category> ?? throw new ArgumentNullException();
+        }
+
+        [XmlIgnore]
+        public ICollection<Offer> Offers
+        {
+            get => _offers;
+            set => _offers = value as List<Offer> ?? throw new ArgumentNullException();
+        }
+
+        public override string ToString()
+        {
+            return ShopId + "-" + Company.Name;
+        }
+    }
+
+    partial class Shop
+    {
         [XmlArray("currencies")]
-        public List<Currency> Currencies
+        [NotMapped]
+        public List<Currency> XmlCurrencies
         {
             get => _currencies;
             set => _currencies = value ?? throw new ArgumentNullException();
         }
 
         [XmlArray("categories")]
-        public List<Category> Categories { get; set; } = new List<Category>();
+        [NotMapped]
+        public List<Category> XmlCategories
+        {
+            get => _categories;
+            set => _categories = value;
+        }
 
         [XmlArray("offers")]
-        public List<Offer> Offers { get; set; }
-
-        public override string ToString()
+        [NotMapped]
+        public List<Offer> XmlOffers
         {
-            return Name + "-" + Company.Name;
+            get => _offers;
+            set => _offers = value;
         }
     }
 }

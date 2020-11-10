@@ -64,7 +64,11 @@ namespace EfProject.Model
             }
         }
 
-        public List<Category> Categories { get; set; } = new List<Category>();
+        [XmlIgnore]
+        public ICollection<Category> Categories { get; set; } = new List<Category>();
+
+        [XmlIgnore]
+        public ICollection<Offer> Offers { get; set; } = new List<Offer>();
 
         public override string ToString()
         {
