@@ -12,7 +12,7 @@ namespace EfProject
 {
     class Program
     {
-        private static string url = @"http://static.ozone.ru/multimedia/yml/facet/mobile_catalog/1133677.xml";
+        private static string url = @"http://static.ozone.ru/multimedia/yml/facet/div_soft.xml";
         private static string searchElement = @"shop";
 
         static void Main(string[] args)
@@ -29,6 +29,7 @@ namespace EfProject
 
         static void MigrationToDB(Shop shop)
         {
+            SetParentCategories(shop);
             SetCategoriesForOffers(shop);
             SetCurrenciesForOffers(shop);
 
@@ -78,6 +79,14 @@ namespace EfProject
             foreach (var offer in shop.Offers)
             {
                 offer.Currency = shop.Currencies.SingleOrDefault(cur => cur.Name == offer.CurrencyId);
+            }
+        }
+
+        static void SetParentCategories(Shop shop)
+        {
+            foreach (var category in shop.Categories)
+            {
+                category.ParentCategory = shop.Categories.FirstOrDefault(c => c.Id == category.ParentId);
             }
         }
     }

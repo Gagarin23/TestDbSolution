@@ -57,11 +57,7 @@ namespace EfProject.Model
         public Category ParentCategory
         {
             get => _category;
-            set
-            {
-                _category = value;
-                value.Categories.Add(this);
-            }
+            set => _category = value;
         }
 
         [XmlIgnore]
